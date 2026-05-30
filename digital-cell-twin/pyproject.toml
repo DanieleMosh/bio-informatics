@@ -1,0 +1,30 @@
+[project]
+name = "digital-cell-twin"
+version = "0.0.1"
+description = "Bite-sized demos toward a high-fidelity digital cell twin (single-cell perturbation prediction: expression -> log-fold-change)."
+requires-python = ">=3.12"
+
+# Core deps: present on every milestone branch. Kept light so `uv sync` is fast.
+dependencies = [
+    "scanpy",
+    "anndata",
+    "numpy",
+    "pandas",
+    "scikit-learn", # ridge baseline
+    "scipy",        # spearman / pearson
+    "marimo",       # EDA notebooks (matches the rest of the repo)
+]
+
+[project.optional-dependencies]
+# Heavy / finicky deps stay opt-in. Install per-milestone with e.g.
+#   uv add --optional models torch
+#   uv pip install scgpt geneformer cell-gears   # (these have fragile installs)
+models = ["torch"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# src-layout: the importable package is `dct` under src/.
+[tool.hatch.build.targets.wheel]
+packages = ["src/dct"]

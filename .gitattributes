@@ -1,0 +1,2 @@
+# Treat lockfiles as binary: no line-by-line diffs, no merge attempts.
+uv.lock binary
