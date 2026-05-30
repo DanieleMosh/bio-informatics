@@ -15,16 +15,13 @@ def _():
 def _(mo):
     mo.md(
         r"""
-    # Data substrate — AnnData sanity checks (PBMC 3K)
+    # Data substrate — AnnData by hand (PBMC 3K)
 
-    Thin EDA notebook: it **imports `dct`** and runs the standard Scanpy PBMC 3K
-    pipeline so we can live inside AnnData and map its layout
-    (`obs / var / X / layers / obsm / uns`).
+    Run in `uv run marimo edit notebooks/0_data_substrate.py`, one cell at a time.
+    Rhythm per step: **predict the shape/values, run, reconcile.** Logic lives in
+    `dct`; the notebook is the learning surface.
 
-    Run order matters in marimo only through cell *dependencies*, not position —
-    each cell declares what it needs as arguments.
-
-    Needs the `eda` extra (graph clustering): `uv sync --extra eda`.
+    Needs the `eda` extra: `uv sync --extra eda`.
     """
     )
     return
@@ -32,13 +29,13 @@ def _(mo):
 
 @app.cell
 def _():
+    import numpy as np
     import scanpy as sc
 
-    # Logic comes from the package, not from notebook cells.
     from dct.data import control_vs_perturbed, describe_anndata
 
     sc.settings.verbosity = 1
-    return control_vs_perturbed, describe_anndata, sc
+    return control_vs_perturbed, describe_anndata, np, sc
 
 
 @app.cell(hide_code=True)
@@ -47,11 +44,8 @@ def _(mo):
         r"""
     ## 1 · Raw AnnData
 
-    `sc.datasets.pbmc3k()` downloads the 10x PBMC 3K dataset (cached locally).
-
-    **Real raw shape:** `2700 cells × 32738 genes`, `X` is a CSR sparse matrix of
-    **raw counts** (`float32`, max ≈ 419). `obs` is empty; `var` only has
-    `gene_ids`. This is the ground truth — print it, don't assume it.
+    `pbmc3k()` is the 10x PBMC dataset (cached). Predict: counts or floats? sparse
+    or dense? `X.max()`?
     """
     )
     return
@@ -60,23 +54,26 @@ def _(mo):
 @app.cell
 def _(describe_anndata, sc):
     adata = sc.datasets.pbmc3k()
-    adata.var_names_make_unique()
+    adata.var_names_make_unique()  # gene symbols repeat; make the index unique
     describe_anndata(adata)
     return (adata,)
+
+
+@app.cell
+def _(adata):
+    # X is a CSR matrix of raw UMI counts; obs is empty on a fresh load.
+    adata.X[:3, :8].toarray(), adata.X.max()
+    return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
-    ## 2 · Standard preprocessing
+    ## 2 · QC filtering
 
-    QC filter → normalize to 10k counts → `log1p` → 2000 highly-variable genes →
-    scale → PCA. We stash the log-normalized full matrix in `adata.raw` before
-    subsetting to HVGs (so per-gene expression stays recoverable).
-
-    Note the target variable lens for later: a perturbation's effect is a
-    **log-fold-change** of expression — i.e. a difference of `log1p` values.
+    Drop low-quality cells (< 200 genes) and near-absent genes (< 3 cells).
+    Predict: how many of 2700 cells and 32738 genes survive?
     """
     )
     return
@@ -86,29 +83,93 @@ def _(mo):
 def _(adata, sc):
     sc.pp.filter_cells(adata, min_genes=200)
     sc.pp.filter_genes(adata, min_cells=3)
-    sc.pp.normalize_total(adata, target_sum=1e4)
-    sc.pp.log1p(adata)
-    sc.pp.highly_variable_genes(adata, n_top_genes=2000)
-    adata.raw = adata
-    proc = adata[:, adata.var.highly_variable].copy()
-    sc.pp.scale(proc, max_value=10)
-    sc.tl.pca(proc, n_comps=50)
-    return (proc,)
+    adata.shape  # (cells, genes) after filtering
+    return
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(
         r"""
-    ## 3 · Neighbors → Leiden → UMAP
+    ## 3 · Normalize + log1p — defines the target variable
 
-    **Real processed layout** after this cell: `2700 × 2000`,
-    `obs = [n_genes, leiden]` (7 clusters, 0–6),
-    `obsm = [X_pca, X_umap]`,
-    `uns = [log1p, hvg, pca, neighbors, leiden, umap]`.
+    `normalize_total` removes sequencing-depth differences (every cell → 10k
+    counts); `log1p` takes log(1 + x). A perturbation effect is a **log-fold-
+    change** = a difference of these log1p values. Predict: row sum after
+    normalize? `X.max()` after log1p?
+    """
+    )
+    return
 
-    This is the map: cluster labels land in `obs`, embeddings in `obsm`, run
-    params in `uns`. Perturbation labels would live in `obs` too.
+
+@app.cell
+def _(adata, np, sc):
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    row_sum_normalized = np.asarray(adata.X.sum(axis=1)).ravel()[:5]  # ~1e4 each
+    sc.pp.log1p(adata)
+    row_sum_normalized, adata.X.max()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## 4 · Highly variable genes
+
+    Flag the 2000 most informative genes (high dispersion at given mean); the rest
+    is mostly noise. Predict: flag stored in `obs` or `var`?
+    """
+    )
+    return
+
+
+@app.cell
+def _(adata, sc):
+    sc.pp.highly_variable_genes(adata, n_top_genes=2000)
+    adata.raw = adata  # keep log-normalized full-gene matrix before subsetting
+    proc = adata[:, adata.var.highly_variable].copy()
+    proc.shape
+    return (proc,)
+
+
+@app.cell
+def _(adata, sc):
+    # The selection rule: dispersion vs. mean, HVGs highlighted.
+    sc.pl.highly_variable_genes(adata)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## 5 · Scale + PCA
+
+    Z-score each gene (mean 0, unit variance, clipped at 10), then reduce 2000
+    genes → 50 PCs. Predict: why is `X` negative after scaling? shape of `X_pca`?
+    """
+    )
+    return
+
+
+@app.cell
+def _(proc, sc):
+    sc.pp.scale(proc, max_value=10)  # z-score per gene -> negatives appear
+    sc.tl.pca(proc, n_comps=50)
+    proc.X.min(), proc.obsm["X_pca"].shape
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+    ## 6 · Neighbors → Leiden → UMAP
+
+    kNN graph on PCA space → Leiden clustering → 2D UMAP embedding. Predict: how
+    many clusters at `resolution=0.5`? where do labels (`obs`) and embedding
+    (`obsm`) land?
     """
     )
     return
@@ -125,7 +186,6 @@ def _(describe_anndata, proc, sc):
 
 @app.cell
 def _(proc, sc):
-    # The payoff plot: clusters in the 2D UMAP embedding.
     sc.pl.umap(proc, color="leiden", legend_loc="on data")
     return
 
@@ -134,12 +194,11 @@ def _(proc, sc):
 def _(mo):
     mo.md(
         r"""
-    ## 4 · Label sanity (toward perturb-seq)
+    ## 7 · Label sanity (toward perturb-seq)
 
-    PBMC 3K has no perturbation column — `leiden` stands in as the categorical
-    label here. On the next milestone (`feat/perturb-seq-target`) the same
-    `control_vs_perturbed` check runs against the real perturbation column of
-    Replogle / Norman, where one value is the control.
+    No perturbation column here — `leiden` is a stand-in categorical. Next
+    milestone runs the same `control_vs_perturbed` check against the real
+    perturbation column of Replogle / Norman.
     """
     )
     return
@@ -147,7 +206,6 @@ def _(mo):
 
 @app.cell
 def _(control_vs_perturbed, proc):
-    # leiden as a stand-in categorical; no single "control" value here.
     control_vs_perturbed(proc, label_col="leiden", control_value="0")
     return
 

@@ -33,6 +33,25 @@ JSON — awkward edits, horrible diffs, merge hell. marimo notebooks are pure
   kills silent shape bugs *before* runtime.
 - Prefer `.py` over `.ipynb`. Keep logic in modules; the notebook just imports.
 
+## Learning notebooks (the EDA notebooks are a learning surface)
+
+Every milestone notebook is run **by hand**, one cell at a time, in
+`uv run marimo edit ...` — the point is the user understanding the data, not a
+green checkmark. So:
+
+- **Rhythm:** *Predict → Run → Inspect → Reconcile.* Each pipeline step gets a
+  short markdown **Predict** prompt (what shape/values to expect) before it. The
+  gap between prediction and reality is the lesson.
+- **Atomic steps.** One conceptual operation per cell, so the AnnData object can
+  be watched changing step by step. Don't fold filter+normalize+HVG+PCA into one
+  cell.
+- **Comments are concise and scientific** — state what a line does and why, in
+  domain terms. No hand-holding, no "your turn" stubs, no empty cells. Inspect
+  cells show real values (`adata.X[:3,:8].toarray()`, `X.max()`), not blank
+  placeholders; the user reads and reasons, the notebook doesn't babysit.
+- **No smoke-test obligation in the notebook.** The user runs it by hand; logic
+  lives in `dct` and is what gets reused/tested elsewhere.
+
 ## Three correctness guards (highest leverage — do not skip)
 
 1. **Backbone choice.** Geneformer is **rank-based** — it does not natively emit
