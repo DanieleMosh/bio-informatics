@@ -11,11 +11,14 @@ dependencies = [
     "numpy",
     "pandas",
     "scikit-learn", # ridge baseline
-    "scipy",        # spearman / pearson
-    "marimo",       # EDA notebooks (matches the rest of the repo)
+    "scipy", # spearman / pearson
+    "marimo", # EDA notebooks (matches the rest of the repo)
 ]
 
 [project.optional-dependencies]
+# EDA extras: graph-based clustering for the data-substrate notebook.
+#   uv sync --extra eda
+eda = ["leidenalg>=0.12.0", "igraph>=1.0.0"]
 # Heavy / finicky deps stay opt-in. Install per-milestone with e.g.
 #   uv add --optional models torch
 #   uv pip install scgpt geneformer cell-gears   # (these have fragile installs)
