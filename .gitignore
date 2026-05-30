@@ -160,3 +160,11 @@ cython_debug/
 #.idea/
 
 __marimo__
+
+# digital-cell-twin: datasets & model artifacts (large; not version-controlled)
+digital-cell-twin/data/*
+!digital-cell-twin/data/.gitkeep
+digital-cell-twin/**/checkpoints/
+*.h5ad
+*.ckpt
+*.pt

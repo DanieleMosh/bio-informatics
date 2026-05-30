@@ -4,6 +4,7 @@ Algorithms and notebooks that I work on related to the bio informatics area
 | Content                                                                                                                                      | Description                                                                                                                            |
 |----------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
 | [📈 Applied Bioinformatics](https://github.com/Daniele1209/bio-informatics/tree/master/Applied%20Bioinformatics) | Course labs solved on Bio-Informatics from TU Dresden                                                           |
+| [🧬 digital-cell-twin](https://github.com/Daniele1209/bio-informatics/tree/master/digital-cell-twin) | Bite-sized demos toward a digital cell twin — single-cell perturbation prediction (expression → log-fold-change) with Transformer AI |
 
 
 <!-- <br></br> -->
