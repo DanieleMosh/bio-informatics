@@ -50,6 +50,16 @@ HVGs, so per-gene expression stays recoverable.
   the **top-DE genes**, not the full ~20k vocab — a full-vector metric is
   dominated by the silent majority.
 
+## Papers
+
+Central to this milestone (full bibliography: [`papers.md`](./papers.md)):
+
+- [Scanpy PBMC 3K tutorial](https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html)
+  — the QC → normalize → HVG → PCA → neighbors → Leiden → UMAP workflow followed here.
+- [Satija et al. 2015](https://doi.org/10.1038/nbt.3192) — the Seurat guided-clustering
+  analysis the Scanpy tutorial reproduces.
+- [Wolf et al. 2018](https://doi.org/10.1186/s13059-017-1382-0) — Scanpy, the toolkit.
+
 ## How to verify
 
 ```bash

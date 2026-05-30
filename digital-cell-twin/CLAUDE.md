@@ -82,7 +82,8 @@ feat/synthesis-eval
 Each PR ships:
 - the demo code / notebook for that milestone,
 - any new helpers in `src/dct/`,
-- a concise synthesis note at `docs/<milestone>.md`.
+- a concise synthesis note at `docs/<milestone>.md`,
+- the **traced papers** for the milestone (see below).
 
 **PR body template:**
 
@@ -95,11 +96,37 @@ Each PR ships:
 ## What's next
 ```
 
+## Trace the papers (every milestone)
+
+Each milestone is centred on specific papers — they're the *why* behind the code.
+Trace them, don't just gesture at them. For every paper central to the feature,
+record **author + year, the one-line claim that matters here, and a working
+hyperlink to the paper itself** (DOI / journal / arXiv URL — not a bare title) in
+**all three** places:
+
+1. **Notebook** — a short markdown cell near the code it motivates (e.g. the
+   in-silico-deletion cell cites Geneformer; the LFC-eval cell cites
+   Ahlmann-Eltze 2025).
+2. **`docs/<milestone>.md`** — a `## Papers` section listing each with the
+   one-line "why it's central here" and link.
+3. **PR body** — the `## Papers` slot, same list, so a reviewer sees the prior
+   art without opening files.
+
+Anchor papers per milestone (extend as you read): data-substrate → 10x PBMC 3K
+(Scanpy tutorial); perturb-seq-target → Replogle 2022, Norman 2019, Adamson
+2016; geneformer-mechanism → Theodoris 2023 (Geneformer); scgpt-gears-machinery
+→ Cui 2024 (scGPT), Roohani 2023 (GEARS); critique-and-baseline → Ahlmann-Eltze
+2025, Kedzierska 2023; synthesis-eval → CZI Virtual Cells, Open Problems.
+
+Keep one running bibliography at `docs/papers.md` (append per milestone) so the
+trail is in one place; the per-milestone notes link into it.
+
 ## Synthesis / notebook style
 
 `docs/<milestone>.md` is markdown-notebook style: **terse, results-forward**.
-State what was done, the real shapes/numbers, the results, the papers (linked),
-and what you'd verify next. No filler.
+State what was done, the real shapes/numbers, the results, the **traced papers**
+(`## Papers`, linked, one-line why-it's-central each), and what you'd verify
+next. No filler.
 
 ## Environment
 

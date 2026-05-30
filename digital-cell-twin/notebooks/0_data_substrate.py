@@ -22,6 +22,12 @@ def _(mo):
     `dct`; the notebook is the learning surface.
 
     Needs the `eda` extra: `uv sync --extra eda`.
+
+    **Papers traced** (full list: `docs/papers.md`):
+    [Scanpy PBMC 3K tutorial](https://scanpy-tutorials.readthedocs.io/en/latest/pbmc3k.html)
+    — the workflow below; reproduces the Seurat guided-clustering analysis of
+    [Satija et al. 2015](https://doi.org/10.1038/nbt.3192); toolkit is
+    [Scanpy, Wolf et al. 2018](https://doi.org/10.1186/s13059-017-1382-0).
     """
     )
     return
